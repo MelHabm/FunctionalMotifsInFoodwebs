@@ -14,6 +14,8 @@ The following functions are used to:
 - avoid cases like cannibalism or mutual predation
 
 Code is based on code provided by Tom Clegg (https://github.com/CleggTom/fw_reactivity)
+
+Last changes: Melanie Habermann (20.07.2025)
 """
 
 """
@@ -334,5 +336,6 @@ function remove_species(com::Community, id::UUID)
 
     return new_com
 end
+
 
 end # end module
