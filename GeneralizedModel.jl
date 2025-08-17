@@ -8,32 +8,6 @@ StatsBase
 export gen_J, assign_lifespans, determine_trophic_levels
 
 # -------------------------------------------------------------------------------------------------------------------
-abstract type AbstractSpecies end
-
-struct Species <: AbstractSpecies
-    np::Float64         # niche position
-    r::Float64          # feeding range
-    c_fr::Float64       # center of the feeding range
-    id::UUID            # unique species ID
-end
-
-abstract type AbstractCommunity end
-
-"""
-    Community
-
-Type containing parameters defining a community including its interaction matrix and a vector of species within.
-"""
-struct Community <: AbstractCommunity
-    N::Int
-    A::Matrix{Float64}
-    sp::Vector{Species}
-    ids::Vector{UUID}
-    np::Vector{Float64}
-    R::Float64
-end
-
-
 """
 gen_J()
 
@@ -178,5 +152,6 @@ function trophic_to_niche(trophic_levels)
         return niche_values
     end
 end
+
 
 end # end module
