@@ -14,7 +14,6 @@ struct Species <: AbstractSpecies
     np::Float64         # niche position
     r::Float64          # feeding range
     c_fr::Float64       # center of the feeding range
-    Tpk::Float64        # temperature peak
     id::UUID            # unique species ID
 end
 
@@ -31,39 +30,9 @@ struct Community <: AbstractCommunity
     sp::Vector{Species}
     ids::Vector{UUID}
     np::Vector{Float64}
-    T::Float64
     R::Float64
 end
 
-struct StructuralParameters
-    N::Int
-    A::Matrix{Float64}
-    α::Vector{Float64}
-    β::Matrix{Float64}
-    χ::Matrix{Float64}
-    ρ::Vector{Float64}
-    ρ̃::Vector{Float64}
-    σ::Vector{Float64}
-    σ̃::Vector{Float64}
-end
-
-struct ExponentialParameters
-    γ::Vector{Float64}
-    λ::Matrix{Float64}
-    μ::Vector{Float64}
-    ϕ::Vector{Float64}
-    ψ::Vector{Float64}
-end
-
-"""
-    GeneralisedParameters
-
-Type to contain the parameters for the normalised model.
-"""
-struct GeneralisedParameters
-    s::StructuralParameters
-    e::ExponentialParameters
-end
 
 """
 gen_J()
@@ -185,120 +154,6 @@ function determine_trophic_levels(Interactions)
     end
     
     return trophic_levels
-end
-
-"""
-
-    structural_parameters(N, A, np, R)
-
-Define structural parameters including
-
-Scale parameters = rate of biomass flow in the steady state
-α   : characteristic times scales
-Relative contributions:
-ρ   : fraction of growth rate by predation
-ρ̃   : fraction of growth by primary production
-σ   : fraction of loss because of predation
-σ̃   : fraction of loss because of mortality
-β   : per capita loss rate because of predation by another species
-χ   : relative contribution to total prey of another species
-"""
-
-function structural_parameters(N, A, np, R)
-    α = (R .^ 0.25np)
-
-    β = A ./ norm.(eachcol(A), 1)'
-    χ = A ./ norm.(eachrow(A), 1)
-
-    β[isnan.(β)] .= 0.0
-    χ[isnan.(χ)] .= 0.0
-
-    ρ = 1 .* (sum(A, dims = 2) .!= 0)[:]
-    ρ̃  = 1 .- ρ
-    
-    σ = 1 .* (sum(A, dims = 1) .!= 0)[:]
-    σ̃  = 1 .- σ
-
-    return StructuralParameters(N, A, α, β, χ, ρ, ρ̃, σ, σ̃)
-end
-
-"""
-
-    random_parameters(N::Int64, M::Int64)
-
-Create a set of exponent parameters for the Generalized Foodweb Model.
-They describe the nonlinearity of the ecological processes in the steady state.
-"""
-
-function random_parameters(N::Int64, M::Int64)
-    γ = rand(Uniform(0.5, 1.5), N, M)       # non-linearity of predation rate with respect to prey Density
-    λ = ones(N, N)                          # non-linearity of the contribution to the diet of another species
-    μ = rand(Uniform(1.0, 2.0), N, M)       # non-linearity of mortality
-    ϕ = rand(Uniform(0.0, 1.0), N, M)       # non-linearity of the primary production
-    ψ = rand(Uniform(0.5,1.5), N, M)        # non-linearity of the response function's predator dependence
-
-    return [ExponentialParameters(γ[:,i], λ, μ[:,i], ϕ[:,i], ψ[:,i]) for i = 1:M]
-end
-
-"""
-    generalised_jacobian!(J, s::StructuralParameters, e::ExponentialParameters)
-
-Constructs the Jaccobian matrix following a Generalized Foodweb Model. 
-Input:
-N : community size
-s : struct with structural parameters
-e : struct with exponent parameters
-"""
-function generalised_jacobian!(J, s::StructuralParameters, e::ExponentialParameters)
-
-    # Generate the Jacobian
-    for i = 1:s.N
-        for j = 1:s.N
-            if i == j   # intraspecific dynamics
-                J[i, j] = s.ρ̃[i] * e.ϕ[i] +                                 # Production 
-                         s.ρ[i] * (e.γ[i] * s.χ[i,i] * e.λ[i,i] + e.ψ[i]) - # Growth through predation 
-                         s.σ̃[i] * e.μ[i]                                    # Mortality
-                for k = 1:s.N
-                    # Substract predation losses
-                    J[i, j] -= s.σ[i] * s.β[k, i] * e.λ[k, i] * ((e.γ[k] - 1) * s.χ[k, i] + 1) 
-                end
-            else        # interspecific dynamics
-                J[i,j] = 0
-
-                if s.χ[i, j] != 0
-                    J[i, j] = s.ρ[i] * e.γ[i] * s.χ[i,j] * e.λ[i,j] 
-                end
-
-                if s.β[j, i] != 0
-                    J[i, j] -= s.σ[i] * s.β[j,i] * e.ψ[j]
-                end
-
-                for k = 1:s.N
-                    if (s.β[k,i] != 0) && (s.χ[k,j] != 0)
-                        J[i,j] -= s.σ[i] * (s.β[k,i] * e.λ[k,j] * (e.γ[k] - 1) * s.χ[k,j])
-                    end
-                end
-            end
-
-            J[i,j] *= s.α[i]
-        end
-    end
-end
-
-"""
-    generalised_jacobian(N::Int, s::StructuralParameters, e::ExponentialParameters)
-
-Generate the Jacobian matrix.
-
-Input:
-N : community size
-s : struct with structural parameters
-e : struct with exponent parameters
-"""
-function generalised_jacobian(N::Int, s::StructuralParameters, e::ExponentialParameters)
-    J = zeros(N, N)
-    generalised_jacobian!(J, s, e)
-    return J 
 end
 
 """
