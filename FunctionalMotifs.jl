@@ -109,7 +109,7 @@ function func_react_motifs(n::Int, interactions::Matrix{Int64})
     for i in 1:n
 
         # Setup symmetric Jacobian
-        H = zeros(N)
+        H = zeros(N, N)
 
         # make sure only reactive systems are used
         # system is reactive if the largest eigenvalue of the symmetric matrix is positive
@@ -417,5 +417,6 @@ function react_motifs_niche(n::Int, N::Int; C::Float64 = 0.2)
     return MotifResults(z, inds, props)
     
 end
+
 
 end # module
