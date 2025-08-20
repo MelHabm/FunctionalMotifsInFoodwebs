@@ -27,7 +27,7 @@ function gen_J(A; R::Float64 = 42.0)
     J = zeros(size(A));
 
     # Calculate alpha based on metabolic rate scales from the niche-like values
-    α = R .^ (0.25 .* niche_like_values)
+    α = R .^ (-0.25 .* niche_like_values)
 
     # Fill the entries in the Jacobian matrix using a generalized food web model 
     # (for more information about the model read Gross & Feudel 2006)
@@ -155,3 +155,4 @@ end
 
 
 end # end module
+
