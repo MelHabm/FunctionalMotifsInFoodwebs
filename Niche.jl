@@ -168,19 +168,6 @@ function community(sp_vec::Vector{Species}; R::Float64 = 42.0)
     return com
 end
 
-function check_iso(com::Community)
-
-    # Find components
-    g = SimpleDiGraph(com.A)
-
-    components = connected_components(g)
-
-    n_components = length(components)
-
-    return n_components
-    
-end
-
 # --------------------------------------------------------------------------------------------------------
 # Checks
 # --------------------------------------------------------------------------------------------------------
@@ -220,6 +207,19 @@ function check_web!(com::Community)
     # Cannibals have a 1 on the diagonal.
     A[diagind(A)] .= 0
 
+end
+
+function check_iso(com::Community)
+
+    # Find components
+    g = SimpleDiGraph(com.A)
+
+    components = connected_components(g)
+
+    n_components = length(components)
+
+    return n_components
+    
 end
 
 """
@@ -347,5 +347,6 @@ function remove_species(com::Community, id::UUID)
 
     return new_com
 end
+
 
 end # end module
