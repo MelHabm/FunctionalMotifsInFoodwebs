@@ -29,6 +29,22 @@ struct MotifResults
 end
 
 """
+    MotifResultsNiche
+
+A struct to hold all results from functional motif analysis.
+z     : reactivity value of the most reactive instance of a motif 
+inds  : indices of the most reactive instance of a motif 
+props : proportion of system reactivity
+Inter : interaction matrix produced by the niche model
+"""
+struct MotifResultsNiche
+    z::Dict{Symbol, Vector{Float64}}
+    inds::Dict{Symbol, Vector{Vector{Any}}}
+    props::Dict{Symbol, Vector{Float64}}
+    Inter::Dict{Symbol, Vector{Matrix{Int64}}}
+end
+
+"""
     func_react_motifs(n, interactions)
 
     Run analysis for functional reactivity motifs on a given interaction matrix 'interactions' for 'n' iterations.
@@ -233,6 +249,9 @@ function react_motifs_niche(n::Int, N::Int; C::Float64 = 0.2)
     z = Dict{Symbol, Vector{Float64}}()             # reactivity values
     inds = Dict{Symbol, Vector{Vector{Any}}}()      # indices of most reactive motif
     props = Dict{Symbol, Vector{Float64}}()         # proportion of system reactivity
+    Inter = Dict{Symbol, Vector{Matrix{Int64}}}() 
+
+    Inter[:H] = Vector{Matrix{Int64}}(undef, n)
 
     for k in motif_keys
         z[k] = Vector{Float64}(undef, n)
@@ -263,8 +282,20 @@ function react_motifs_niche(n::Int, N::Int; C::Float64 = 0.2)
         # Combine to community/network
         com = Niche.community(sp_vec)
 
+        n_components = 42
+
+        while n_components > 1
+            sp_vec = [Niche.species(C) for i = 1:N]
+
+            # Combine to community/network
+            com = Niche.community(sp_vec)
+
+            n_components = Niche.check_iso(com)
+        end
+
         # Convert the interaction matrix
         A = convert(Matrix{Int64}, com.A)
+        Inter[:H][i] = A
 
         # Create empty Hermetian
         H = zeros(size(A))
@@ -414,9 +445,8 @@ function react_motifs_niche(n::Int, N::Int; C::Float64 = 0.2)
 
     end
 
-    return MotifResults(z, inds, props)
+    return MotifResultsNiche(z, inds, props, Inter)
     
 end
-
 
 end # module

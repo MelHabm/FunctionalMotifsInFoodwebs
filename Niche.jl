@@ -1,8 +1,9 @@
 module Niche
 
-using Distributions
-using UUIDs
-using LinearAlgebra
+using Distributions,
+UUIDs,
+LinearAlgebra,
+Graphs
 
 """
 Foodweb generator based on the ecological niche model.
@@ -14,8 +15,6 @@ The following functions are used to:
 - avoid cases like cannibalism or mutual predation
 
 Code is based on code provided by Tom Clegg (https://github.com/CleggTom/fw_reactivity)
-
-Last changes: Melanie Habermann (20.07.2025)
 """
 
 """
@@ -165,9 +164,21 @@ function community(sp_vec::Vector{Species}; R::Float64 = 42.0)
 
     # Check structure and remove mutual predation and cannibalism
     check_web!(com)
-    # Check structure and remove isolated nodes
-    check_isolation!(com)
+
     return com
+end
+
+function check_iso(com::Community)
+
+    # Find components
+    g = SimpleDiGraph(com.A)
+
+    components = connected_components(g)
+
+    n_components = length(components)
+
+    return n_components
+    
 end
 
 # --------------------------------------------------------------------------------------------------------
@@ -336,6 +347,5 @@ function remove_species(com::Community, id::UUID)
 
     return new_com
 end
-
 
 end # end module
