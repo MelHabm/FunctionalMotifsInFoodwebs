@@ -206,7 +206,8 @@ function hist_probdens2x2_comp(panels;
                                 n_bins::Int64 = 30,
                                 maxval::Number = 10.0,
                                 colors::Tuple = (:blue, :orange),
-                                outpath::String = "comparison_2x2.png")
+                                outpath::String = "comparison_2x2.png",
+                                leg_labels = ("Set 1", "Set 2"))
 
     # Safety first
     if length(panels) != 4
@@ -233,7 +234,7 @@ function hist_probdens2x2_comp(panels;
             normalize = :pdf,
             alpha = 0.5,
             color = colors[1],
-            label = "Set 1",
+            label = leg_labels[1],
             subplot = i)
 
         histogram!(plt, d2;
@@ -241,7 +242,7 @@ function hist_probdens2x2_comp(panels;
             normalize = :pdf,
             alpha = 0.5,
             color = colors[2],
-            label = "Set 2",
+            label = leg_labels[2],
             subplot = i)
 
         # Styling each subplot
@@ -398,5 +399,6 @@ function bar_species_frequencies(num_spec::Dict{Int64, Int64})
         title = "Element Frequency Distribution")
 
 end # end function
+
 
 end # end module
