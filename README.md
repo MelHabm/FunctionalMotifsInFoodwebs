@@ -39,3 +39,11 @@ ReactivityResults.jl:
 
 ex_intmat.csv: 
     The interaction matrix of the example network used in the paper "Functional Motifs in Foodwebs and Networks". (i,j)th element = 1, if i eats j.
+
+data.zip:
+    Contains the data from the simulation of both, the example network and the niche model, as .jld2 files. Needs the JLD2 package. To load the data use for the example network:
+    jld = JLD2.jldopen("data_ex_network.jld2", "r");
+    data_examnet = jld["results"];
+    And for the niche model: 
+    jld = JLD2.jldopen("data_niche_model.jld2", "r");
+    data_niche = jld["results_niche"];
